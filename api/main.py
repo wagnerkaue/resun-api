@@ -1,4 +1,4 @@
-from typing import, Any, Optional, List
+from typing import Any, Optional, List
 
 from fastapi import FastAPI, HTTPException, Request, Depends, Query
 from contextlib import asynccontextmanager
@@ -15,8 +15,8 @@ async def lifespan(app: FastAPI):
     # Startup
     try:
         # Check for the existence of the service account key file in production environments
-        if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-             print("Using credentials from GOOGLE_APPLICATION_CREDENTIALS env var.")
+        if os.environ.get("GOOGLE_SERVICE_ACCOUNT_KEY"):
+             print("Using credentials from GOOGLE_SERVICE_ACCOUNT_KEY env var.")
              app.state.db = firestore.Client()
         else:
             print("No credentials found. Attempting to use default credentials.")
