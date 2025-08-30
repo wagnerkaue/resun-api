@@ -1,13 +1,10 @@
-from typing import cast, Any, Optional, List
+from typing import, Any, Optional, List
 
 from fastapi import FastAPI, HTTPException, Request, Depends, Query
 from contextlib import asynccontextmanager
 from google.cloud import firestore
-from google.oauth2 import service_account
 import os
-from api.models import Meal
-
-KEY_FILE_PATH = "serviceAccountKey.json"
+from .models import Meal
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,10 +18,6 @@ async def lifespan(app: FastAPI):
         if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
              print("Using credentials from GOOGLE_APPLICATION_CREDENTIALS env var.")
              app.state.db = firestore.Client()
-        elif os.path.exists(KEY_FILE_PATH):
-            print(f"Using credentials from file: {KEY_FILE_PATH}")
-            credentials = service_account.Credentials.from_service_account_file(KEY_FILE_PATH)
-            app.state.db = firestore.Client(credentials=credentials)
         else:
             print("No credentials found. Attempting to use default credentials.")
             app.state.db = firestore.Client()
