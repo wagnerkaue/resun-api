@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import date
 from typing import Optional, cast
 
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Query
 from google.cloud import firestore
 from starlette.datastructures import State
 
@@ -31,30 +31,48 @@ def get_db(request: Request) -> firestore.Client:
 
 @app.get(path="/cardapios", summary="Obter lista de cardápios", response_model=list[Cardapio])
 async def obter_cardapios(
-        campus: Optional[Campus] = None,
+        campus: Optional[list[Campus]] = Query(None),
+        tipo_refeicao: Optional[list[TipoRefeicao]] = Query(None),
+        fornecedor: Optional[list[Fornecedor]] = Query(None),
+
         data: Optional[date] = None,
-        tipo_refeicao: Optional[TipoRefeicao] = None,
         data_inicio: Optional[date] = None,
         data_fim: Optional[date] = None,
+
+        limite: int = Query(
+            default=100,
+            gt=0,
+            le=1000,
+            description="Número máximo de cardápios a serem retornados."
+        ),
+
         db: firestore.Client = Depends(get_db)
 ):
-    query = db.collection("cardapios")
-
-    if campus:
-        query = query.where("campus", "==", campus.value)
-
-    if tipo_refeicao:
-        query = query.where("refeicao", "==", tipo_refeicao.value)
-
-    if data:
-        query = query.where("data", "==", data.isoformat())
-    else:
-        if data_inicio:
-            query = query.where("data", ">=", data_inicio.isoformat())
-        if data_fim:
-            query = query.where("data", "<=", data_fim.isoformat())
-
     try:
+        query = db.collection("cardapios")
+
+        if campus:
+            campus_values = [c.value for c in campus]
+            query = query.where("campus", "in", campus_values)
+
+        if tipo_refeicao:
+            refeicao_values = [r.value for r in tipo_refeicao]
+            query = query.where("tipo_refeicao", "in", refeicao_values)
+
+        if fornecedor:
+            fornecedor_values = [f.value for f in fornecedor]
+            query = query.where("fornecedor", "in", fornecedor_values)
+
+        if data:
+            query = query.where("data", "==", data.isoformat())
+        else:
+            if data_inicio:
+                query = query.where("data", ">=", data_inicio.isoformat())
+            if data_fim:
+                query = query.where("data", "<=", data_fim.isoformat())
+
+        query = query.limit(limite)
+
         docs = query.stream()
 
         cardapios_validos = []

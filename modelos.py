@@ -1,6 +1,7 @@
 """Modelos para a API do RESUN-UFS"""
 from datetime import date
 from enum import Enum
+
 from pydantic import BaseModel, computed_field, Field, field_serializer
 
 
@@ -45,7 +46,6 @@ class Cardapio(BaseModel):
     def serialize_data(self, data: date, _info):
         """Serializa o objeto de data para uma string no formato AAAA-MM-DD."""
         return data.isoformat()
-
 
     @computed_field
     @property

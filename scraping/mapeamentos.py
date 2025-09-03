@@ -1,4 +1,3 @@
-
 from modelos import Campus
 from scraping.mapeamentos_base import MapeamentoCardapio, MapeamentoBandejao
 
@@ -171,7 +170,6 @@ MAPEAMENTO_SAO_CRISTOVAO = [
     ),
 ]
 
-
 _ITABAIANA_HEADER = {
     "campus": (2, 3),
     "fornecedor": (3, 2),
@@ -339,7 +337,6 @@ MAPEAMENTO_ITABAIANA = [
         )
     ),
 ]
-
 
 _CENTRAL_HEADER = {
     "campus": (2, 3),
@@ -517,7 +514,6 @@ MAPEAMENTO_LAGARTO = [
     ),
 ]
 
-
 _SERTAO_HEADER = {
     "campus": (2, 3),
     "fornecedor": (3, 2),
@@ -604,7 +600,6 @@ MAPEAMENTO_SERTAO = [
         )
     ),
 ]
-
 
 MAPEAMENTO_BANDEJOES = {
     Campus.SAO_CRISTOVAO: MAPEAMENTO_SAO_CRISTOVAO,

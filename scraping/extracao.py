@@ -2,9 +2,10 @@ import json
 import os
 
 from dotenv import load_dotenv
-from modelos import Campus
+
 from auth import get_sheets_service
 from mapeamentos import MAPEAMENTO_BANDEJOES
+from modelos import Campus
 from scraping.parser import ParserCardapio
 
 load_dotenv()
