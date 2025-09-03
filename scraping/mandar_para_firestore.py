@@ -11,7 +11,7 @@ def fazer_upload_cardapios():
         return
 
     db = get_firestore_client()
-    collection_ref = db.collection("bandejoes")
+    collection_ref = db.collection("cardapios")
 
     print(f"Iniciando upload de {len(lista_cardapios)} cardápios para o Firestore...")
 
