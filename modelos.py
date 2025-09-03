@@ -50,6 +50,6 @@ class Cardapio(BaseModel):
     @computed_field
     @property
     def id(self) -> str:
-        """Identificador único do bandejão (campus + fornecedor + data + tipo_refeição)"""
+        """Identificador único do bandejão (campus + data + tipo_refeição)"""
         data_formatada = self.data.strftime("%Y-%m-%d")
-        return f"{self.campus.value}_{self.fornecedor.value}_{data_formatada}_{self.tipo_refeicao.value}"
+        return f"{self.campus.value}_{data_formatada}_{self.tipo_refeicao.value}"
