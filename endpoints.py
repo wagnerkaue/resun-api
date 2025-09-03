@@ -33,7 +33,7 @@ def get_db(request: Request) -> firestore.Client:
 async def obter_cardapios(
         campus: Optional[Campus] = None,
         data: Optional[date] = None,
-        refeicao: Optional[TipoRefeicao] = None,
+        tipo_refeicao: Optional[TipoRefeicao] = None,
         data_inicio: Optional[date] = None,
         data_fim: Optional[date] = None,
         db: firestore.Client = Depends(get_db)
@@ -43,8 +43,8 @@ async def obter_cardapios(
     if campus:
         query = query.where("campus", "==", campus.value)
 
-    if refeicao:
-        query = query.where("refeicao", "==", refeicao.value)
+    if tipo_refeicao:
+        query = query.where("refeicao", "==", tipo_refeicao.value)
 
     if data:
         query = query.where("data", "==", data.isoformat())
