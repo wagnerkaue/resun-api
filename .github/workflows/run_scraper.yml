@@ -34,4 +34,4 @@ jobs:
           echo "SHEET_ID_CENTRAL=${{ secrets.SHEET_ID_CENTRAL }}" >> .env
 
       - name: Roda o script
-        run: python scraping/upload_to_firestore.py
+        run: python scraping/mandar_para_firestore.py
