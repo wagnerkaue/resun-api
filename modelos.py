@@ -23,24 +23,12 @@ class TipoRefeicao(str, Enum):
     JANTAR = "jantar"
 
 
-class Bandejao(BaseModel):
-    saladas: list[str] = Field(description="Lista de saladas disponíveis")
-    molhos: list[str] = Field(description="Molhos para acompanhar")
-    sementes: list[str] = Field(description="Sementes disponíveis")
-    pratos_origem_animal: list[str] = Field(description="Pratos com proteína animal")
-    pratos_origem_vegetal: list[str] = Field(description="Pratos de origem vegetal")
-    guarnicoes: list[str] = Field(description="Guarnições do dia")
-    pratos_base: list[str] = Field(description="Pratos base (arroz, feijão etc.)")
-    sobremesas: list[str] = Field(description="Sobremesas disponíveis")
-    bebidas: list[str] = Field(description="Bebidas disponíveis")
-
-
 class Cardapio(BaseModel):
     campus: Campus = Field(description="Campus da UFS onde está o restaurante")
     fornecedor: Fornecedor = Field(description="Empresa fornecedora da refeição")
     tipo_refeicao: TipoRefeicao = Field(description="Tipo de refeição (almoço ou jantar)")
     data: date = Field(description="Data da refeição")
-    bandejao: Bandejao
+    id_alimentos: list[str]
 
     @field_serializer('data')
     def serialize_data(self, data: date, _info):

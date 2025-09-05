@@ -1,10 +1,10 @@
 from auth import get_firestore_client
-from scraping.extracao import extrair_cardapios_api
+from scraping.planilhas import obter_todos_cardapios_dessa_semana
 
 
 def fazer_upload_cardapios():
     print("Iniciando extração dos cardápios...")
-    lista_cardapios = extrair_cardapios_api()
+    lista_cardapios = obter_todos_cardapios_dessa_semana()
 
     if not lista_cardapios:
         print("Nenhum cardápio foi extraído.")

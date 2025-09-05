@@ -1,10 +1,9 @@
 import os
 
 import firebase_admin
+import gspread
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 
 load_dotenv()
 
@@ -23,13 +22,14 @@ def _get_credentials():
     return abs_key_path
 
 
-def get_sheets_service():
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+def get_gspread_client_service_account():
+    """
+    Retorna um gspread.Client usando gspread.service_account.
+    Requer o JSON da conta de serviço local (caminho obtido por _get_credentials()).
+    """
     abs_key_path = _get_credentials()
-
-    creds = service_account.Credentials.from_service_account_file(abs_key_path, scopes=SCOPES)
-    service = build('sheets', 'v4', credentials=creds)
-    return service
+    # gspread.service_account já cria credentials internamente
+    return gspread.service_account(filename=abs_key_path)
 
 
 def get_firestore_client():

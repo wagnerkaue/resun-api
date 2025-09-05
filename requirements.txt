@@ -1,3 +1,9 @@
+pydantic
+protobuf
+starlette
+python-dotenv
+firebase-admin
+gspread
 fastapi
 uvicorn[standard]
 google-cloud-firestore
