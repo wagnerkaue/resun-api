@@ -34,9 +34,9 @@ async def _obter_alimentos_por_ids(db: firestore.Client, ids: list[str]) -> list
     if not ids:
         return []
 
-    # Firestore não garante a ordem ao usar 'in', então mapeamos os resultados
     alimentos_map = {}
     refs = [db.collection("alimentos").document(id) for id in ids]
+
     docs = db.get_all(refs)
 
     for doc in docs:
@@ -44,7 +44,6 @@ async def _obter_alimentos_por_ids(db: firestore.Client, ids: list[str]) -> list
             alimento = Alimento(**doc.to_dict())
             alimentos_map[alimento.id] = alimento
 
-    # Retorna na ordem original dos IDs
     return [alimentos_map[id] for id in ids if id in alimentos_map]
 
 
@@ -59,7 +58,7 @@ async def obter_cardapios(
         data_fim: Optional[date] = None,
 
         limite: int = Query(
-            default=10,  # Reduzido para evitar sobrecarga com as buscas aninhadas
+            default=10,
             gt=0,
             le=100,
             description="Número máximo de cardápios a serem retornados."
@@ -95,7 +94,12 @@ async def obter_cardapios(
         for doc in docs:
             cardapio_base = Cardapio(**doc.to_dict())
             alimentos = await _obter_alimentos_por_ids(db, cardapio_base.id_alimentos)
-            cardapio_completo = CardapioCompleto(**cardapio_base.model_dump(), id_alimentos=alimentos)
+
+            cardapio_dict = cardapio_base.model_dump()
+            del cardapio_dict['id_alimentos']
+
+            cardapio_completo = CardapioCompleto(**cardapio_dict, id_alimentos=alimentos)
+
             cardapios_completos.append(cardapio_completo)
 
         return cardapios_completos
@@ -118,7 +122,10 @@ async def obter_cardapio_dado_id(id_cardapio: str, db: firestore.Client = Depend
     cardapio_base = Cardapio(**doc.to_dict())
     alimentos = await _obter_alimentos_por_ids(db, cardapio_base.id_alimentos)
 
-    return CardapioCompleto(**cardapio_base.model_dump(), id_alimentos=alimentos)
+    cardapio_dict = cardapio_base.model_dump()
+    del cardapio_dict['id_alimentos']
+
+    return CardapioCompleto(**cardapio_dict, id_alimentos=alimentos)
 
 
 @app.get(path="/alimentos", summary="Obter lista de todos os alimentos", response_model=list[Alimento])
