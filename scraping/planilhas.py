@@ -632,4 +632,4 @@ if __name__ == "__main__":
         [c.data, c.campus, c.tipo_refeicao, ", ".join(c.id_alimentos)]
         for c in cardapios
     ]
-    print(tabulate(tabela, headers=["Data", "Campus", "Refeição", "Itens"]))
+    print(tabulate(tabela, headers=["Data", "Campus", "Refeição", "Alimentos"]))

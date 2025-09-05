@@ -7,7 +7,7 @@ from google.cloud import firestore
 from starlette.datastructures import State
 
 from auth import get_firestore_client
-from modelos import Campus, Fornecedor, Cardapio, TipoRefeicao
+from modelos import Campus, Fornecedor, Cardapio, TipoRefeicao, Alimento, CardapioCompleto
 
 
 @asynccontextmanager
@@ -29,7 +29,26 @@ def get_db(request: Request) -> firestore.Client:
     return db
 
 
-@app.get(path="/cardapios", summary="Obter lista de cardápios", response_model=list[Cardapio])
+async def _obter_alimentos_por_ids(db: firestore.Client, ids: list[str]) -> list[Alimento]:
+    """Função auxiliar para buscar documentos de alimentos por uma lista de IDs."""
+    if not ids:
+        return []
+
+    # Firestore não garante a ordem ao usar 'in', então mapeamos os resultados
+    alimentos_map = {}
+    refs = [db.collection("alimentos").document(id) for id in ids]
+    docs = db.get_all(refs)
+
+    for doc in docs:
+        if doc.exists:
+            alimento = Alimento(**doc.to_dict())
+            alimentos_map[alimento.id] = alimento
+
+    # Retorna na ordem original dos IDs
+    return [alimentos_map[id] for id in ids if id in alimentos_map]
+
+
+@app.get(path="/cardapios", summary="Obter lista de cardápios", response_model=list[CardapioCompleto])
 async def obter_cardapios(
         campus: Optional[list[Campus]] = Query(None),
         tipo_refeicao: Optional[list[TipoRefeicao]] = Query(None),
@@ -40,9 +59,9 @@ async def obter_cardapios(
         data_fim: Optional[date] = None,
 
         limite: int = Query(
-            default=100,
+            default=10,  # Reduzido para evitar sobrecarga com as buscas aninhadas
             gt=0,
-            le=1000,
+            le=100,
             description="Número máximo de cardápios a serem retornados."
         ),
 
@@ -54,11 +73,9 @@ async def obter_cardapios(
         if campus:
             campus_values = [c.value for c in campus]
             query = query.where("campus", "in", campus_values)
-
         if tipo_refeicao:
             refeicao_values = [r.value for r in tipo_refeicao]
             query = query.where("tipo_refeicao", "in", refeicao_values)
-
         if fornecedor:
             fornecedor_values = [f.value for f in fornecedor]
             query = query.where("fornecedor", "in", fornecedor_values)
@@ -72,17 +89,16 @@ async def obter_cardapios(
                 query = query.where("data", "<=", data_fim.isoformat())
 
         query = query.limit(limite)
-
         docs = query.stream()
 
-        cardapios_validos = []
+        cardapios_completos = []
         for doc in docs:
-            try:
-                cardapios_validos.append(Cardapio(**doc.to_dict()))
-            except Exception as e:
-                print(f"Erro ao converter documento {doc.id}: {e}")
+            cardapio_base = Cardapio(**doc.to_dict())
+            alimentos = await _obter_alimentos_por_ids(db, cardapio_base.id_alimentos)
+            cardapio_completo = CardapioCompleto(**cardapio_base.model_dump(), id_alimentos=alimentos)
+            cardapios_completos.append(cardapio_completo)
 
-        return cardapios_validos
+        return cardapios_completos
 
     except Exception as e:
         raise HTTPException(
@@ -91,7 +107,7 @@ async def obter_cardapios(
         )
 
 
-@app.get(path="/cardapios/{id_cardapio}", summary="Obter cardápio pelo ID", response_model=Cardapio)
+@app.get(path="/cardapios/{id_cardapio}", summary="Obter cardápio pelo ID", response_model=CardapioCompleto)
 async def obter_cardapio_dado_id(id_cardapio: str, db: firestore.Client = Depends(get_db)):
     doc_ref = db.collection("cardapios").document(id_cardapio)
     doc = doc_ref.get()
@@ -99,7 +115,27 @@ async def obter_cardapio_dado_id(id_cardapio: str, db: firestore.Client = Depend
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Cardápio não encontrado")
 
-    return Cardapio(**doc.to_dict())
+    cardapio_base = Cardapio(**doc.to_dict())
+    alimentos = await _obter_alimentos_por_ids(db, cardapio_base.id_alimentos)
+
+    return CardapioCompleto(**cardapio_base.model_dump(), id_alimentos=alimentos)
+
+
+@app.get(path="/alimentos", summary="Obter lista de todos os alimentos", response_model=list[Alimento])
+async def obter_alimentos(db: firestore.Client = Depends(get_db)):
+    docs = db.collection("alimentos").stream()
+    return [Alimento(**doc.to_dict()) for doc in docs]
+
+
+@app.get(path="/alimentos/{id_alimento}", summary="Obter alimento pelo ID", response_model=Alimento)
+async def obter_alimento_dado_id(id_alimento: str, db: firestore.Client = Depends(get_db)):
+    doc_ref = db.collection("alimentos").document(id_alimento)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Alimento não encontrado")
+
+    return Alimento(**doc.to_dict())
 
 
 @app.get(path="/campi", summary="Obter lista de todos os campi")
